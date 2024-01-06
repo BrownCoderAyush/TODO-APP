@@ -1,8 +1,23 @@
 let todoDataListSection = document.getElementById('todo-data-list');
 let saveButton = document.getElementById("save-todo");
 let todoInputBar = document.getElementById("todo-input-bar");
+let getPendingTodosButton = document.getElementById("get-todos");
 let todoData = [];
 
+getPendingTodosButton.addEventListener("click",()=>{
+    let newTodos = todoData.filter((todo,index)=>{
+        if(todo.status == "Finished.."){
+            return false;
+        }
+        return true;
+    })
+    todoData = newTodos;
+    console.log(todoData);
+    todoDataListSection.innerHTML="";
+    todoData.forEach((element,idx)=>{
+        addTodo(element , idx+1);
+      })
+})
 todoInputBar.addEventListener("keyup",()=>{
     let todoText = todoInputBar.value;
     if(todoText.length==0){
@@ -36,6 +51,8 @@ function addTodo(todoObj, todoCount) {
     let todoActions = document.createElement("div");
     let deleteButton = document.createElement("button");
     let finishedButton = document.createElement("button");
+    let editButton = document.createElement("button");
+    let hiddenInput = document.createElement("input");
     let hr = document.createElement("hr");
 
     // adding classes
@@ -47,23 +64,33 @@ function addTodo(todoObj, todoCount) {
     todoActions.classList.add("todo-actions", "d-flex", "justify-content-start", "gap-2");
     deleteButton.classList.add("btn", "btn-danger", "delete-todo");
     finishedButton.classList.add("btn", "btn-success", "finish-todo");
-
+    editButton.classList.add("btn","btn-warning","edit-todo");
+    hiddenInput.classList.add("form-control","todo-detail");
     deleteButton.onclick = deleteTodo;
     finishedButton.onclick = finishedTodo;
+    editButton.onclick = editTodo;
+    hiddenInput.type = "hidden";
+
 
     todoNumber.textContent = `${todoCount}.`;
     todoDetail.textContent = todoObj.text; // sets the todo text sent from the input element
     todoStatus.textContent = `${todoObj.status}`;
     deleteButton.textContent = "Delete";
+    editButton.textContent = "Edit";
     finishedButton.textContent = todoObj.finishedButtonText;
+    hiddenInput.addEventListener("keypress",saveEdittedTodo);
 
     deleteButton.setAttribute("todo-idx",todoCount-1);
     finishedButton.setAttribute("todo-idx",todoCount-1);
+    editButton.setAttribute("todo-idx",todoCount-1);
+    todoDetail.setAttribute("todo-idx",todoCount-1);
+    hiddenInput.setAttribute("todo-idx",todoCount-1);
     todoActions.appendChild(deleteButton);
     todoActions.appendChild(finishedButton);
-
+    todoActions.appendChild(editButton);
     todoItem.appendChild(todoNumber);
     todoItem.appendChild(todoDetail);
+    todoItem.appendChild(hiddenInput);
     todoItem.appendChild(todoStatus);
     todoItem.appendChild(todoActions);
 
@@ -72,7 +99,32 @@ function addTodo(todoObj, todoCount) {
 
     todoDataListSection.appendChild(rowDiv);
 }
+function editTodo(event){
+    let editBtn = event.target;
+    let indexToBeEdited = Number(editBtn.getAttribute("todo-idx"));
+    let detailDiv = document.querySelector(`div[todo-idx="${indexToBeEdited}"]`);
+    let input = document.querySelector(`input[todo-idx="${indexToBeEdited}"]`);
+    detailDiv.style.display = "none";
+    input.type = "text";
+}
+function saveEdittedTodo(event){
+    let inputToBeSaved = event.target;
+    let indexInputToBeSaved = Number(inputToBeSaved.getAttribute("todo-idx"));
+    let detailDiv = document.querySelector(`div[todo-idx="${indexInputToBeSaved}"]`);
+    let input = document.querySelector(`input[todo-idx="${indexInputToBeSaved}"]`);
+    if(event.key=="Enter"){
+        let editedText = inputToBeSaved.value;
+        todoData[indexInputToBeSaved].text = editedText;
+        console.log(todoData[indexInputToBeSaved].text);
+        detailDiv.style.display = "block";
+        input.type = "hidden";
+        todoDataListSection.innerHTML="";
+        todoData.forEach((element , idx)=>{
+        addTodo(element,idx+1);
+    })
 
+    }
+}
 function finishedTodo(event){
 
       let indexToBeFinished =Number(event.target.getAttribute("todo-idx"));
